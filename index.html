@@ -213,6 +213,10 @@
   .btn-secondary { padding: 11px 18px; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 5px; font-size: 13px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.15s; }
   .btn-secondary:hover { background: var(--accent); color: #fff; }
   .print-hint { font-size: 12px; color: var(--muted); }
+  .mode-tabs { display: flex; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; width: fit-content; }
+  .mode-tab { padding: 7px 20px; font-size: 13px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; background: #e8e0d0; color: var(--muted); cursor: pointer; border: none; border-right: 1px solid var(--border); transition: all 0.15s; }
+  .mode-tab:last-child { border-right: none; }
+  .mode-tab.active { background: var(--accent); color: #fff; }
 
   #preview-area { margin-top: 32px; padding-top: 24px; border-top: 2px dashed var(--border); display: none; }
   #preview-area h2 { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 16px; }
@@ -289,23 +293,45 @@
   </div>
 
   <div class="form-card">
-    <h2>발급 제외 좌석 입력</h2>
-    <div class="form-group full" style="margin-bottom:10px">
-      <label>제외할 좌석을 한 줄에 하나씩 입력하세요</label>
-      <textarea id="exclude-input" rows="6" placeholder="예시:
-A블록 1열 전체
-B블록 3열 1-5번
-C블록 전체
-D블록 2열 3번"></textarea>
+    <!-- 모드 탭 -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="mode-tab-exclude" onclick="switchMode('exclude')">전체 발급 (제외 지정)</button>
+      <button class="mode-tab" id="mode-tab-specific" onclick="switchMode('specific')">특정 좌석만 출력</button>
     </div>
-    <div id="parse-result" style="font-size:12px;color:var(--muted);margin-top:6px;min-height:18px"></div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700">입력 형식 안내</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.9">
-        <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 전체</code> — 블록 전체 제외<br>
-        <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 3열 전체</code> — 특정 열 전체 제외<br>
-        <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 3열 1-5번</code> — 범위 제외<br>
-        <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 3열 2번</code> — 단일 좌석 제외
+
+    <!-- 제외 모드 -->
+    <div id="mode-exclude">
+      <div class="form-group full" style="margin-bottom:10px">
+        <label>제외할 좌석을 한 줄에 하나씩 입력하세요</label>
+        <textarea id="exclude-input" rows="5" placeholder="예시:&#10;A블록 1열 전체&#10;B블록 3열 1-5번&#10;C블록 전체&#10;D블록 2열 3번"></textarea>
+      </div>
+      <div id="parse-result" style="font-size:12px;color:var(--muted);margin-top:6px;min-height:18px"></div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700">입력 형식 안내</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.9">
+          <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 전체</code> — 블록 전체 제외<br>
+          <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 3열 전체</code> — 특정 열 전체 제외<br>
+          <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 3열 1-5번</code> — 범위 제외<br>
+          <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 3열 2번</code> — 단일 좌석 제외
+        </div>
+      </div>
+    </div>
+
+    <!-- 특정 좌석 모드 -->
+    <div id="mode-specific" style="display:none">
+      <div class="form-group full" style="margin-bottom:10px">
+        <label>출력할 좌석을 한 줄에 하나씩 입력하세요</label>
+        <textarea id="specific-input" rows="5" placeholder="예시:&#10;A블록 3열 5번&#10;B블록 1열 2번&#10;C블록 7열 3번"></textarea>
+      </div>
+      <div id="specific-result" style="font-size:12px;color:var(--muted);margin-top:6px;min-height:18px"></div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700">입력 형식 안내</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.9">
+          <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 3열 2번</code> — 단일 좌석<br>
+          <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 3열 1-5번</code> — 범위 지정<br>
+          <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 3열 전체</code> — 열 전체<br>
+          <code style="background:#f0ebe0;padding:1px 5px;border-radius:3px">A블록 전체</code> — 블록 전체
+        </div>
       </div>
     </div>
   </div>
@@ -706,59 +732,6 @@ function parseExclusions() {
   return { excluded: excluded, errors: errors };
 }
 
-function updateSummary() {
-  var data = SEATS[hall];
-  var result = parseExclusions();
-  var excluded = result.excluded;
-  var errors = result.errors;
-
-  // 전체 키
-  var total = 0;
-  Object.keys(data).forEach(function(blk) {
-    data[blk].forEach(function(r) { total += r.seats.length; });
-  });
-  var exCount = Object.keys(excluded).length;
-
-  document.getElementById('issue-summary').textContent =
-    '발급 ' + (total - exCount) + '석 / 전체 ' + total + '석' +
-    (exCount > 0 ? '  (제외 ' + exCount + '석)' : '');
-
-  var parseEl = document.getElementById('parse-result');
-  if (errors.length > 0) {
-    parseEl.style.color = '#c0392b';
-    parseEl.textContent = '⚠ ' + errors.join(' · ');
-  } else if (exCount > 0) {
-    parseEl.style.color = '#2a6a2a';
-    parseEl.textContent = '✓ 제외 좌석 ' + exCount + '석 인식됨';
-  } else {
-    parseEl.style.color = 'var(--muted)';
-    parseEl.textContent = '제외 없이 전체 발급';
-  }
-
-  var notice = document.getElementById('excluded-notice');
-  notice.textContent = exCount > 0
-    ? Object.keys(excluded).map(function(k) {
-        var p = k.split('|'); return p[0]+' '+p[1]+' '+p[2]+'번';
-      }).join(', ')
-    : '';
-}
-
-function getIssueSeats() {
-  var result = parseExclusions();
-  var excluded = result.excluded;
-  var data = SEATS[hall];
-  var seats = [];
-  Object.keys(data).forEach(function(blk) {
-    data[blk].forEach(function(r) {
-      r.seats.forEach(function(s) {
-        var k = blk+'|'+r.row+'|'+s;
-        if (!excluded[k]) seats.push([blk, r.row, s]);
-      });
-    });
-  });
-  return seats;
-}
-
 // ========== 폼 ==========
 function getFormValues() {
   var ev = document.getElementById('f-event').value.trim();
@@ -861,8 +834,165 @@ function printTickets() {
   window.print();
 }
 
+// ========== 모드 전환 ==========
+var printMode = 'exclude';  // 'exclude' | 'specific'
+
+function switchMode(mode) {
+  printMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('mode-tab-' + mode).classList.add('active');
+  document.getElementById('mode-exclude').style.display = mode === 'exclude' ? 'block' : 'none';
+  document.getElementById('mode-specific').style.display = mode === 'specific' ? 'block' : 'none';
+  document.getElementById('preview-area').style.display = 'none';
+  updateSummary();
+}
+
+// ========== 특정 좌석 파싱 (제외 파싱과 동일 문법, 결과를 포함으로 해석) ==========
+function parseSpecific() {
+  var input = document.getElementById('specific-input').value;
+  var data = SEATS[hall];
+  var included = [];
+  var errors = [];
+  var seen = {};
+
+  function addSeat(blk, rowLabel, seatNum) {
+    var k = blk + '|' + rowLabel + '|' + seatNum;
+    if (!seen[k]) { seen[k] = true; included.push([blk, rowLabel, seatNum]); }
+  }
+
+  var lines = input.split('
+');
+  lines.forEach(function(rawLine) {
+    var line = rawLine.trim();
+    if (!line) return;
+
+    var blk = null;
+    Object.keys(data).forEach(function(b) { if (line.indexOf(b) === 0) blk = b; });
+    if (!blk) { errors.push('"' + line + '" — 블록을 찾을 수 없음'); return; }
+
+    var rest = line.slice(blk.length).trim();
+
+    // 블록 전체
+    if (rest === '전체' || rest === '') {
+      data[blk].forEach(function(r) {
+        r.seats.forEach(function(s) { addSeat(blk, r.row, s); });
+      });
+      return;
+    }
+
+    var rowMatch = rest.match(/^(\d+)열\s*(.*)/);
+    if (!rowMatch) { errors.push('"' + line + '" — 열 형식 오류'); return; }
+    var rowLabel = rowMatch[1] + '열';
+    var rowSpec = rowMatch[2].trim();
+
+    var rowData = null;
+    (data[blk] || []).forEach(function(r) { if (r.row === rowLabel) rowData = r; });
+    if (!rowData) { errors.push('"' + line + '" — ' + rowLabel + ' 없음'); return; }
+
+    // 열 전체
+    if (rowSpec === '전체' || rowSpec === '') {
+      rowData.seats.forEach(function(s) { addSeat(blk, rowLabel, s); });
+      return;
+    }
+
+    // 범위
+    var rangeMatch = rowSpec.match(/^(\d+)-(\d+)번?$/);
+    if (rangeMatch) {
+      var from = parseInt(rangeMatch[1]), to = parseInt(rangeMatch[2]);
+      rowData.seats.forEach(function(s) { if (s >= from && s <= to) addSeat(blk, rowLabel, s); });
+      return;
+    }
+
+    // 단일
+    var singleMatch = rowSpec.match(/^(\d+)번?$/);
+    if (singleMatch) {
+      var sn = parseInt(singleMatch[1]);
+      if (rowData.seats.indexOf(sn) >= 0) addSeat(blk, rowLabel, sn);
+      else errors.push('"' + line + '" — ' + sn + '번 좌석 없음');
+      return;
+    }
+
+    errors.push('"' + line + '" — 형식 오류');
+  });
+
+  return { seats: included, errors: errors };
+}
+
+// ========== getIssueSeats 오버라이드 ==========
+function getIssueSeats() {
+  if (printMode === 'specific') {
+    return parseSpecific().seats;
+  }
+  var result = parseExclusions();
+  var excluded = result.excluded;
+  var data = SEATS[hall];
+  var seats = [];
+  Object.keys(data).forEach(function(blk) {
+    data[blk].forEach(function(r) {
+      r.seats.forEach(function(s) {
+        if (!excluded[blk + '|' + r.row + '|' + s]) seats.push([blk, r.row, s]);
+      });
+    });
+  });
+  return seats;
+}
+
+// updateSummary 확장
+function updateSummary() {
+  if (printMode === 'specific') {
+    var res = parseSpecific();
+    var cnt = res.seats.length;
+    document.getElementById('issue-summary').textContent = '출력 ' + cnt + '석';
+    var el = document.getElementById('specific-result');
+    if (res.errors.length > 0) {
+      el.style.color = '#c0392b';
+      el.textContent = '⚠ ' + res.errors.join(' · ');
+    } else if (cnt > 0) {
+      el.style.color = '#2a6a2a';
+      el.textContent = '✓ ' + cnt + '석 인식됨: ' + res.seats.map(function(a){ return a[0]+' '+a[1]+' '+a[2]+'번'; }).join(', ');
+    } else {
+      el.style.color = 'var(--muted)';
+      el.textContent = '출력할 좌석을 입력하세요';
+    }
+    document.getElementById('excluded-notice').textContent = '';
+    return;
+  }
+
+  // 제외 모드 (기존 로직)
+  var data = SEATS[hall];
+  var result = parseExclusions();
+  var excluded = result.excluded;
+  var errors = result.errors;
+  var total = 0;
+  Object.keys(data).forEach(function(blk) {
+    data[blk].forEach(function(r) { total += r.seats.length; });
+  });
+  var exCount = Object.keys(excluded).length;
+  document.getElementById('issue-summary').textContent =
+    '발급 ' + (total - exCount) + '석 / 전체 ' + total + '석' +
+    (exCount > 0 ? '  (제외 ' + exCount + '석)' : '');
+  var parseEl = document.getElementById('parse-result');
+  if (errors.length > 0) {
+    parseEl.style.color = '#c0392b';
+    parseEl.textContent = '⚠ ' + errors.join(' · ');
+  } else if (exCount > 0) {
+    parseEl.style.color = '#2a6a2a';
+    parseEl.textContent = '✓ 제외 좌석 ' + exCount + '석 인식됨';
+  } else {
+    parseEl.style.color = 'var(--muted)';
+    parseEl.textContent = '제외 없이 전체 발급';
+  }
+  var notice = document.getElementById('excluded-notice');
+  notice.textContent = exCount > 0
+    ? Object.keys(excluded).map(function(k) {
+        var p = k.split('|'); return p[0]+' '+p[1]+' '+p[2]+'번';
+      }).join(', ')
+    : '';
+}
+
 // ========== 초기화 ==========
 document.getElementById('exclude-input').addEventListener('input', updateSummary);
+document.getElementById('specific-input').addEventListener('input', updateSummary);
 updateSummary();
 </script>
 </body>
