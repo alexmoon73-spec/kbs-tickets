@@ -258,8 +258,8 @@
   </header>
 
   <div class="hall-tabs">
-    <button class="hall-tab active" id="tab-arthall" onclick="switchHall('arthall')">KBS아트홀</button>
-    <button class="hall-tab" id="tab-kbshall" onclick="switchHall('kbshall')">KBS홀</button>
+    <button class="hall-tab active" id="tab-arthall">KBS아트홀</button>
+    <button class="hall-tab" id="tab-kbshall">KBS홀</button>
   </div>
 
   <div class="form-card">
@@ -295,8 +295,8 @@
   <div class="form-card">
     <!-- 모드 탭 -->
     <div class="mode-tabs">
-      <button class="mode-tab active" id="mode-tab-exclude" onclick="switchMode('exclude')">전체 발급 (제외 지정)</button>
-      <button class="mode-tab" id="mode-tab-specific" onclick="switchMode('specific')">특정 좌석만 출력</button>
+      <button class="mode-tab active" id="mode-tab-exclude">전체 발급 (제외 지정)</button>
+      <button class="mode-tab" id="mode-tab-specific">특정 좌석만 출력</button>
     </div>
 
     <!-- 제외 모드 -->
@@ -342,8 +342,8 @@
   </div>
 
   <div class="action-bar">
-    <button class="btn-primary" onclick="printTickets()">🖨 PDF 출력</button>
-    <button class="btn-secondary" onclick="previewTickets()">👁 미리보기</button>
+    <button class="btn-primary" id="btn-print">🖨 PDF 출력</button>
+    <button class="btn-secondary" id="btn-preview">👁 미리보기</button>
     <span class="print-hint">Chrome에서 "PDF로 저장" 선택</span>
   </div>
 
@@ -991,6 +991,12 @@ function updateSummary() {
 }
 
 // ========== 초기화 ==========
+document.getElementById('tab-arthall').addEventListener('click', function(){ switchHall('arthall'); });
+document.getElementById('tab-kbshall').addEventListener('click', function(){ switchHall('kbshall'); });
+document.getElementById('mode-tab-exclude').addEventListener('click', function(){ switchMode('exclude'); });
+document.getElementById('mode-tab-specific').addEventListener('click', function(){ switchMode('specific'); });
+document.getElementById('btn-print').addEventListener('click', printTickets);
+document.getElementById('btn-preview').addEventListener('click', previewTickets);
 document.getElementById('exclude-input').addEventListener('input', updateSummary);
 document.getElementById('specific-input').addEventListener('input', updateSummary);
 updateSummary();
