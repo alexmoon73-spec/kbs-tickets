@@ -235,6 +235,9 @@
   #print-area { display: none; }
 
   /* ===== TICKET ===== */
+  .qr-area { position: absolute; right: 3pt; bottom: 3pt; }
+  .qr-area canvas { display: block; }
+  .qr-area .qr-label { font-size: 5pt; color: #555; text-align: center; margin-top: 1pt; font-family: 'Noto Sans KR', sans-serif; line-height: 1; }
   .ticket-wrapper { width: 428pt; height: 164pt; position: relative; overflow: hidden; background: #fff; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; }
   .ticket-divider { position: absolute; left: 133pt; top: 0; width: 1pt; height: 164pt; background: repeating-linear-gradient(to bottom, #888 0, #888 4pt, transparent 4pt, transparent 7pt); }
   .stub { position: absolute; left: 8.519pt; top: 0; width: 124pt; height: 164pt; }
@@ -288,6 +291,10 @@
       <div class="form-group full">
         <label>안내 문구</label>
         <input type="text" id="f-notice" value="※ 초등학생부터 입장 가능합니다.">
+      </div>
+      <div class="form-group full" style="margin-top:4px">
+        <label>공연 안내 QR 링크 <span style="font-weight:400;color:var(--muted)">(입력 시 티켓 우측 하단에 QR코드 자동 삽입 · 비워두면 QR 없음)</span></label>
+        <input type="text" id="f-qr" placeholder="예: https://program.kbs.co.kr/...">
       </div>
     </div>
   </div>
@@ -355,6 +362,7 @@
 
 <div id="print-area"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // ========== 좌석 데이터 ==========
 var SEATS = {
@@ -740,12 +748,13 @@ function getFormValues() {
   var subtitle = document.getElementById('f-subtitle').value.trim();
   var perf = document.getElementById('f-perf').value.trim();
   var notice = document.getElementById('f-notice').value.trim();
+  var qrUrl = document.getElementById('f-qr').value.trim();
   var ym = ev.match(/^(\d{4})\s*/);
   var year = ym ? ym[1] : '';
   var evName = ym ? ev.slice(ym[0].length) : ev;
   var m = dateLong.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일(\([가-힣]\))\s*(\d{1,2}:\d{2})/);
   var shortDate = m ? (m[1]+'.'+m[2]+'.'+m[3]+'.'+m[4]+' '+m[5]) : dateLong;
-  return {ev:ev, year:year, evName:evName, venue:venue, dateLong:dateLong, shortDate:shortDate, subtitle:subtitle, perf:perf, notice:notice};
+  return {ev:ev, year:year, evName:evName, venue:venue, dateLong:dateLong, shortDate:shortDate, subtitle:subtitle, perf:perf, notice:notice, qrUrl:qrUrl};
 }
 
 // ========== 티켓 빌드 ==========
@@ -779,6 +788,8 @@ function buildTicket(blk, row, seatNum, v) {
     : v.dateLong + ' / ' + v.venue;
 
   var m5 = '좌석권 : ' + sf;
+  // QR이 있으면 우측 44pt를 QR 영역으로 확보
+  var mainW = v.qrUrl ? 232 : 278.653;
 
   return '<div class="ticket-wrapper">' +
     '<div class="ticket-divider"></div>' +
@@ -791,23 +802,43 @@ function buildTicket(blk, row, seatNum, v) {
       '<div class="stub-line" style="top:120.785pt;font-size:'+afs(sf,11.9708,112)+'pt">'+esc(sf)+'</div>' +
     '</div>' +
     '<div class="main">' +
-      '<div class="mixed-row" style="top:23.582pt;height:14.9635pt">' +
+      '<div class="mixed-row" style="top:23.582pt;height:14.9635pt;width:'+(mainW)+'pt">' +
         '<span class="span-a" style="font-size:14.9635pt">'+esc(v.year)+'</span>' +
-        '<span class="span-b" style="left:35.5pt;font-size:'+afs(v.evName,14.0058,243)+'pt">'+esc(v.evName)+'</span>' +
+        '<span class="span-b" style="left:35.5pt;font-size:'+afs(v.evName,14.0058,v.qrUrl?196:243)+'pt">'+esc(v.evName)+'</span>' +
       '</div>' +
-      '<div class="mixed-row" style="top:42.903pt;height:14.0058pt">' +
+      '<div class="mixed-row" style="top:42.903pt;height:14.0058pt;width:'+(mainW)+'pt">' +
         '<span class="span-a" style="font-size:14.0058pt">KBS국악관현악단</span>' +
-        '<span class="span-b" style="left:106pt;font-size:'+afs(v.subtitle,9.9358,172)+'pt">'+esc(v.subtitle)+'</span>' +
+        '<span class="span-b" style="left:106pt;font-size:'+afs(v.subtitle,9.9358,v.qrUrl?130:172)+'pt">'+esc(v.subtitle)+'</span>' +
       '</div>' +
-      '<div class="main-line" style="top:63.996pt;font-size:'+afs(m3,9.9358,278.653)+'pt">'+esc(m3)+'</div>' +
-      '<div class="main-line" style="top:81.785pt;font-size:'+afs(v.perf,8.4993,278.653)+'pt">'+esc(v.perf)+'</div>' +
-      '<div class="main-line" style="top:103.954pt;font-size:'+afs(m5,14.0058,278.653)+'pt">'+esc(m5)+'</div>' +
-      '<div class="main-line" style="top:128.614pt;font-size:'+afs(v.notice,8.0204,278.653)+'pt">'+esc(v.notice)+'</div>' +
+      '<div class="main-line" style="top:63.996pt;font-size:'+afs(m3,9.9358,mainW)+'pt">'+esc(m3)+'</div>' +
+      '<div class="main-line" style="top:81.785pt;font-size:'+afs(v.perf,8.4993,mainW)+'pt">'+esc(v.perf)+'</div>' +
+      '<div class="main-line" style="top:103.954pt;font-size:'+afs(m5,14.0058,mainW)+'pt">'+esc(m5)+'</div>' +
+      '<div class="main-line" style="top:128.614pt;font-size:'+afs(v.notice,8.0204,mainW)+'pt">'+esc(v.notice)+'</div>' +
     '</div>' +
+    (v.qrUrl ? '<div class="qr-area" id="qr-' + blk.replace(/\s/g,'') + row.replace(/\s/g,'') + seatNum + '"></div>' : '') +
   '</div>';
 }
 
 // ========== 미리보기 / 인쇄 ==========
+function generateQRCodes(v) {
+  if (!v.qrUrl || typeof QRCode === 'undefined') return;
+  document.querySelectorAll('.qr-area').forEach(function(el) {
+    el.innerHTML = '';
+    var qr = new QRCode(el, {
+      text: v.qrUrl,
+      width: 38,
+      height: 38,
+      colorDark: '#000',
+      colorLight: '#fff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    var label = document.createElement('div');
+    label.className = 'qr-label';
+    label.textContent = '공연안내';
+    el.appendChild(label);
+  });
+}
+
 function previewTickets() {
   var seats = getIssueSeats();
   if (!seats.length) { alert('발급할 좌석이 없습니다.'); return; }
@@ -820,6 +851,7 @@ function previewTickets() {
     wrap.innerHTML = buildTicket(arr[0], arr[1], arr[2], v);
     container.appendChild(wrap);
   });
+  setTimeout(function(){ generateQRCodes(v); }, 50);
   var pa = document.getElementById('preview-area');
   pa.style.display = 'block';
   pa.scrollIntoView({behavior:'smooth'});
@@ -831,7 +863,14 @@ function printTickets() {
   var v = getFormValues();
   var pa = document.getElementById('print-area');
   pa.innerHTML = seats.map(function(arr) { return buildTicket(arr[0], arr[1], arr[2], v); }).join('');
-  window.print();
+  if (v.qrUrl) {
+    setTimeout(function(){
+      generateQRCodes(v);
+      setTimeout(function(){ window.print(); }, 300);
+    }, 50);
+  } else {
+    window.print();
+  }
 }
 
 // ========== 모드 전환 ==========
