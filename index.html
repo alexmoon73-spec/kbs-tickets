@@ -294,7 +294,13 @@
       </div>
       <div class="form-group full" style="margin-top:4px">
         <label>공연 안내 QR 링크 <span style="font-weight:400;color:var(--muted)">(입력 시 티켓 우측 하단에 QR코드 자동 삽입 · 비워두면 QR 없음)</span></label>
-        <input type="text" id="f-qr" placeholder="예: https://program.kbs.co.kr/...">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <input type="text" id="f-qr" placeholder="예: https://program.kbs.co.kr/..." style="flex:3">
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px">
+            <label>QR 하단 문구</label>
+            <input type="text" id="f-qr-label" placeholder="예: 공연안내" value="공연안내" style="font-size:13px">
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -749,12 +755,13 @@ function getFormValues() {
   var perf = document.getElementById('f-perf').value.trim();
   var notice = document.getElementById('f-notice').value.trim();
   var qrUrl = document.getElementById('f-qr').value.trim();
+  var qrLabel = document.getElementById('f-qr-label').value.trim() || '공연안내';
   var ym = ev.match(/^(\d{4})\s*/);
   var year = ym ? ym[1] : '';
   var evName = ym ? ev.slice(ym[0].length) : ev;
   var m = dateLong.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일(\([가-힣]\))\s*(\d{1,2}:\d{2})/);
   var shortDate = m ? (m[1]+'.'+m[2]+'.'+m[3]+'.'+m[4]+' '+m[5]) : dateLong;
-  return {ev:ev, year:year, evName:evName, venue:venue, dateLong:dateLong, shortDate:shortDate, subtitle:subtitle, perf:perf, notice:notice, qrUrl:qrUrl};
+  return {ev:ev, year:year, evName:evName, venue:venue, dateLong:dateLong, shortDate:shortDate, subtitle:subtitle, perf:perf, notice:notice, qrUrl:qrUrl, qrLabel:qrLabel};
 }
 
 // ========== 티켓 빌드 ==========
@@ -834,7 +841,7 @@ function generateQRCodes(v) {
     });
     var label = document.createElement('div');
     label.className = 'qr-label';
-    label.textContent = '공연안내';
+    label.textContent = v.qrLabel;
     el.appendChild(label);
   });
 }
