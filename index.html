@@ -366,7 +366,9 @@
 
 <div id="print-area"></div>
 
+
 <script>
+// ===== qrcode-generator 내장 =====
 //---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2665,8 +2667,6 @@ var qrcode = function() {
     return qrcode;
 }));
 
-</script>
-<script>
 // ========== 좌석 데이터 ==========
 var SEATS = {
   arthall: {
@@ -2970,8 +2970,22 @@ function switchHall(h) {
 //   A블록 3열 전체
 //   A블록 3열 1-5번
 //   A블록 3열 2번
+function normalizeInput(input) {
+  return input
+    // 전각 숫자/공백 정규화
+    .replace(/１/g,'1').replace(/２/g,'2').replace(/３/g,'3')
+    .replace(/４/g,'4').replace(/５/g,'5').replace(/６/g,'6')
+    .replace(/７/g,'7').replace(/８/g,'8').replace(/９/g,'9').replace(/０/g,'0')
+    .replace(/　/g,' ')
+    // "a블록" → "A블록" (대소문자)
+    .replace(/([a-e])(블록)/gi, function(m, p1, p2) { return p1.toUpperCase() + p2; })
+    // "A열" → "A블록" (열 → 블록)
+    .replace(/([A-Ea-e])\s*열(\s)/gi, function(m, p1, p2) { return p1.toUpperCase() + '블록' + p2; })
+    .replace(/([A-Ea-e])\s*열$/gim, function(m, p1) { return p1.toUpperCase() + '블록'; });
+}
+
 function parseExclusions() {
-  var input = document.getElementById('exclude-input').value;
+  var input = normalizeInput(document.getElementById('exclude-input').value);
   var data = SEATS[hall];
   var excluded = {};   // key → true
   var errors = [];
@@ -3119,11 +3133,9 @@ function buildTicket(blk, row, seatNum, v) {
       '<div class="main-line" style="top:103.954pt;font-size:'+afs(m5,14.0058,mainW)+'pt">'+esc(m5)+'</div>' +
       '<div class="main-line" style="top:128.614pt;font-size:'+afs(v.notice,8.0204,mainW)+'pt">'+esc(v.notice)+'</div>' +
     '</div>' +
-
+    (v.qrUrl ? '<div class="qr-area" id="qr-'+blk.replace(/[^a-zA-Z0-9]/g,'')+row.replace(/[^a-zA-Z0-9]/g,'')+seatNum+'"></div>' : '') +
   '</div>';
 }
-
-
 
 // ========== 미리보기 / 인쇄 ==========
 function generateQRCodes(v) {
@@ -3210,7 +3222,7 @@ function switchMode(mode) {
 
 // ========== 특정 좌석 파싱 (제외 파싱과 동일 문법, 결과를 포함으로 해석) ==========
 function parseSpecific() {
-  var input = document.getElementById('specific-input').value;
+  var input = normalizeInput(document.getElementById('specific-input').value);
   var data = SEATS[hall];
   var included = [];
   var errors = [];
