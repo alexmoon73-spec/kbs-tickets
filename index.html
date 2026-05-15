@@ -235,7 +235,21 @@
   #print-area { display: none; }
 
   /* ===== TICKET ===== */
-  .qr-area { position: absolute; right: 20pt; bottom: 8pt; }
+  /* 티켓 내 QR (작은 것, 위치 안내용) */
+  .qr-area { position: absolute; right: 18pt; bottom: 4pt; }
+  /* 티켓 하단 QR 별도 영역 (크게, 인식용) */
+  .qr-standalone {
+    width: 428pt;
+    padding: 8pt 12pt 4pt 141.347pt;
+    display: flex;
+    align-items: center;
+    gap: 12pt;
+    background: #fff;
+    page-break-inside: avoid;
+  }
+  .qr-standalone-inner { display: flex; align-items: center; gap: 10pt; }
+  .qr-standalone .qr-text { font-size: 8pt; color: #333; font-family: "Noto Sans KR", sans-serif; font-weight: 700; line-height: 1.5; }
+  .qr-standalone .qr-sub  { font-size: 7pt; color: #888; font-family: "Noto Sans KR", sans-serif; font-weight: 400; }
   .qr-area canvas { display: block; }
   .qr-area .qr-label { font-size: 5pt; color: #555; text-align: center; margin-top: 1pt; font-family: 'Noto Sans KR', sans-serif; line-height: 1; }
   .ticket-wrapper { width: 428pt; height: 164pt; position: relative; overflow: hidden; background: #fff; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; }
@@ -794,7 +808,7 @@ function buildTicket(blk, row, seatNum, v) {
 
   var m5 = '좌석권 : ' + sf;
   // QR이 있으면 우측 44pt를 QR 영역으로 확보
-  var mainW = v.qrUrl ? 232 : 278.653;
+  var mainW = v.qrUrl ? 200 : 278.653;
 
   return '<div class="ticket-wrapper">' +
     '<div class="ticket-divider"></div>' +
@@ -824,23 +838,62 @@ function buildTicket(blk, row, seatNum, v) {
   '</div>';
 }
 
+// ========== QR 별도 영역 빌드 ==========
+function buildQRStandalone(blk, row, seatNum, v) {
+  if (!v.qrUrl) return '';
+  var sf = blk + ' ' + row + ' ' + seatNum + '번';
+  var divId = 'qrs-' + blk.replace(/[^a-zA-Z0-9]/g,'') + row.replace(/[^a-zA-Z0-9]/g,'') + seatNum;
+  return '<div class="qr-standalone">' +
+    '<div class="qr-standalone-inner">' +
+      '<div id="' + divId + '"></div>' +
+      '<div>' +
+        '<div class="qr-text">' + esc(v.qrLabel) + '</div>' +
+        '<div class="qr-sub">' + esc(sf) + '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
 // ========== 미리보기 / 인쇄 ==========
 function generateQRCodes(v) {
   if (!v.qrUrl || typeof QRCode === 'undefined') return;
+  // 티켓 내 QR: 고해상도(200px)로 생성 후 CSS로 52pt 크기로 축소 → 인쇄 선명도 향상
   document.querySelectorAll('.qr-area').forEach(function(el) {
     el.innerHTML = '';
-    var qr = new QRCode(el, {
+    new QRCode(el, {
       text: v.qrUrl,
-      width: 34,
-      height: 34,
+      width: 200,
+      height: 200,
       colorDark: '#000',
       colorLight: '#fff',
-      correctLevel: QRCode.CorrectLevel.M
+      correctLevel: QRCode.CorrectLevel.L
     });
-    var label = document.createElement('div');
-    label.className = 'qr-label';
-    label.textContent = v.qrLabel;
-    el.appendChild(label);
+    // 생성된 canvas/img를 52pt로 축소
+    setTimeout(function() {
+      var img = el.querySelector('img, canvas');
+      if (img) {
+        img.style.width = '52pt';
+        img.style.height = '52pt';
+        img.style.display = 'block';
+        img.style.imageRendering = 'pixelated';
+      }
+      var label = document.createElement('div');
+      label.className = 'qr-label';
+      label.textContent = v.qrLabel;
+      el.appendChild(label);
+    }, 100);
+  });
+  // 티켓 하단 큰 QR (인식용)
+  document.querySelectorAll('[id^="qrs-"]').forEach(function(el) {
+    el.innerHTML = '';
+    new QRCode(el, {
+      text: v.qrUrl,
+      width: 90,
+      height: 90,
+      colorDark: '#000',
+      colorLight: '#fff',
+      correctLevel: QRCode.CorrectLevel.L
+    });
   });
 }
 
@@ -867,7 +920,9 @@ function printTickets() {
   if (!seats.length) { alert('발급할 좌석이 없습니다.'); return; }
   var v = getFormValues();
   var pa = document.getElementById('print-area');
-  pa.innerHTML = seats.map(function(arr) { return buildTicket(arr[0], arr[1], arr[2], v); }).join('');
+  pa.innerHTML = seats.map(function(arr) {
+    return buildTicket(arr[0], arr[1], arr[2], v);
+  }).join('');
   if (v.qrUrl) {
     setTimeout(function(){
       generateQRCodes(v);
