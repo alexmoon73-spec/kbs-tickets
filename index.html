@@ -235,7 +235,7 @@
   #print-area { display: none; }
 
   /* ===== TICKET ===== */
-  .qr-area { position: absolute; right: 8pt; bottom: 6pt; }
+  .qr-area { position: absolute; right: 20pt; bottom: 8pt; }
   .qr-area canvas { display: block; }
   .qr-area .qr-label { font-size: 5pt; color: #555; text-align: center; margin-top: 1pt; font-family: 'Noto Sans KR', sans-serif; line-height: 1; }
   .ticket-wrapper { width: 428pt; height: 164pt; position: relative; overflow: hidden; background: #fff; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; }
@@ -831,8 +831,8 @@ function generateQRCodes(v) {
     el.innerHTML = '';
     var qr = new QRCode(el, {
       text: v.qrUrl,
-      width: 38,
-      height: 38,
+      width: 34,
+      height: 34,
       colorDark: '#000',
       colorLight: '#fff',
       correctLevel: QRCode.CorrectLevel.M
