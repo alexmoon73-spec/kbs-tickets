@@ -225,7 +225,7 @@
   .ticket-preview-wrap .ticket-wrapper { box-shadow: 0 2px 12px rgba(0,0,0,0.18); border: 0.5px solid #ccc; }
 
   /* ===== PRINT ===== */
-  @page { size: 428pt 164pt; margin: 0; }
+  @page { size: 428pt 164pt; margin: 0; }  /* QR 있을 때 JS로 동적 변경 */
   @media print {
     .no-print { display: none !important; }
     body { background: #fff; }
@@ -235,23 +235,25 @@
   #print-area { display: none; }
 
   /* ===== TICKET ===== */
-  /* 티켓 내 QR (작은 것, 위치 안내용) */
-  .qr-area { position: absolute; right: 18pt; bottom: 4pt; }
-  /* 티켓 하단 QR 별도 영역 (크게, 인식용) */
-  .qr-standalone {
+  /* QR 띠 (티켓 바로 아래, 같은 페이지) */
+  .qr-strip {
     width: 428pt;
-    padding: 8pt 12pt 4pt 141.347pt;
+    height: 56pt;
+    background: #fff;
     display: flex;
     align-items: center;
-    gap: 12pt;
-    background: #fff;
+    padding: 0 10pt;
+    gap: 10pt;
+    border-top: 1pt dashed #aaa;
     page-break-inside: avoid;
+    page-break-before: avoid;
   }
-  .qr-standalone-inner { display: flex; align-items: center; gap: 10pt; }
-  .qr-standalone .qr-text { font-size: 8pt; color: #333; font-family: "Noto Sans KR", sans-serif; font-weight: 700; line-height: 1.5; }
-  .qr-standalone .qr-sub  { font-size: 7pt; color: #888; font-family: "Noto Sans KR", sans-serif; font-weight: 400; }
-  .qr-area canvas { display: block; }
-  .qr-area .qr-label { font-size: 5pt; color: #555; text-align: center; margin-top: 1pt; font-family: 'Noto Sans KR', sans-serif; line-height: 1; }
+  .qr-strip-qr { flex-shrink: 0; }
+  .qr-strip-qr img, .qr-strip-qr canvas { width: 44pt !important; height: 44pt !important; display: block !important; }
+  .qr-strip-info { font-family: "Noto Sans KR", sans-serif; line-height: 1.5; }
+  .qr-strip-label { font-size: 8.5pt; font-weight: 700; color: #1a1a1a; }
+  .qr-strip-seat  { font-size: 7.5pt; color: #555; }
+  .qr-strip-url   { font-size: 6pt; color: #999; margin-top: 1pt; }
   .ticket-wrapper { width: 428pt; height: 164pt; position: relative; overflow: hidden; background: #fff; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; }
   .ticket-divider { position: absolute; left: 133pt; top: 0; width: 1pt; height: 164pt; background: repeating-linear-gradient(to bottom, #888 0, #888 4pt, transparent 4pt, transparent 7pt); }
   .stub { position: absolute; left: 8.519pt; top: 0; width: 124pt; height: 164pt; }
@@ -380,7 +382,7 @@
 
 <div id="print-area"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 // ========== 좌석 데이터 ==========
 var SEATS = {
@@ -808,7 +810,7 @@ function buildTicket(blk, row, seatNum, v) {
 
   var m5 = '좌석권 : ' + sf;
   // QR이 있으면 우측 44pt를 QR 영역으로 확보
-  var mainW = v.qrUrl ? 200 : 278.653;
+  var mainW = 278.653;
 
   return '<div class="ticket-wrapper">' +
     '<div class="ticket-divider"></div>' +
@@ -821,11 +823,11 @@ function buildTicket(blk, row, seatNum, v) {
       '<div class="stub-line" style="top:120.785pt;font-size:'+afs(sf,11.9708,112)+'pt">'+esc(sf)+'</div>' +
     '</div>' +
     '<div class="main">' +
-      '<div class="mixed-row" style="top:23.582pt;height:14.9635pt;width:'+(mainW)+'pt">' +
+      '<div class="mixed-row" style="top:23.582pt;height:14.9635pt">' +
         '<span class="span-a" style="font-size:14.9635pt">'+esc(v.year)+'</span>' +
         '<span class="span-b" style="left:35.5pt;font-size:'+afs(v.evName,14.0058,v.qrUrl?196:243)+'pt">'+esc(v.evName)+'</span>' +
       '</div>' +
-      '<div class="mixed-row" style="top:42.903pt;height:14.0058pt;width:'+(mainW)+'pt">' +
+      '<div class="mixed-row" style="top:42.903pt;height:14.0058pt">' +
         '<span class="span-a" style="font-size:14.0058pt">KBS국악관현악단</span>' +
         '<span class="span-b" style="left:106pt;font-size:'+afs(v.subtitle,9.9358,v.qrUrl?130:172)+'pt">'+esc(v.subtitle)+'</span>' +
       '</div>' +
@@ -834,66 +836,55 @@ function buildTicket(blk, row, seatNum, v) {
       '<div class="main-line" style="top:103.954pt;font-size:'+afs(m5,14.0058,mainW)+'pt">'+esc(m5)+'</div>' +
       '<div class="main-line" style="top:128.614pt;font-size:'+afs(v.notice,8.0204,mainW)+'pt">'+esc(v.notice)+'</div>' +
     '</div>' +
-    (v.qrUrl ? '<div class="qr-area" id="qr-' + blk.replace(/\s/g,'') + row.replace(/\s/g,'') + seatNum + '"></div>' : '') +
+
   '</div>';
 }
 
-// ========== QR 별도 영역 빌드 ==========
-function buildQRStandalone(blk, row, seatNum, v) {
+// ========== QR 띠 빌드 ==========
+function buildQRStrip(blk, row, seatNum, v) {
   if (!v.qrUrl) return '';
   var sf = blk + ' ' + row + ' ' + seatNum + '번';
   var divId = 'qrs-' + blk.replace(/[^a-zA-Z0-9]/g,'') + row.replace(/[^a-zA-Z0-9]/g,'') + seatNum;
-  return '<div class="qr-standalone">' +
-    '<div class="qr-standalone-inner">' +
-      '<div id="' + divId + '"></div>' +
-      '<div>' +
-        '<div class="qr-text">' + esc(v.qrLabel) + '</div>' +
-        '<div class="qr-sub">' + esc(sf) + '</div>' +
-      '</div>' +
+  return '<div class="qr-strip">' +
+    '<div class="qr-strip-qr" id="' + divId + '"></div>' +
+    '<div class="qr-strip-info">' +
+      '<div class="qr-strip-label">' + esc(v.qrLabel) + '</div>' +
+      '<div class="qr-strip-seat">' + esc(sf) + '</div>' +
+      '<div class="qr-strip-url">' + esc(v.qrUrl) + '</div>' +
     '</div>' +
   '</div>';
 }
 
 // ========== 미리보기 / 인쇄 ==========
 function generateQRCodes(v) {
-  if (!v.qrUrl || typeof QRCode === 'undefined') return;
-  // 티켓 내 QR: 고해상도(200px)로 생성 후 CSS로 52pt 크기로 축소 → 인쇄 선명도 향상
-  document.querySelectorAll('.qr-area').forEach(function(el) {
-    el.innerHTML = '';
-    new QRCode(el, {
-      text: v.qrUrl,
-      width: 200,
-      height: 200,
-      colorDark: '#000',
-      colorLight: '#fff',
-      correctLevel: QRCode.CorrectLevel.L
-    });
-    // 생성된 canvas/img를 52pt로 축소
-    setTimeout(function() {
-      var img = el.querySelector('img, canvas');
-      if (img) {
-        img.style.width = '52pt';
-        img.style.height = '52pt';
-        img.style.display = 'block';
-        img.style.imageRendering = 'pixelated';
-      }
-      var label = document.createElement('div');
-      label.className = 'qr-label';
-      label.textContent = v.qrLabel;
-      el.appendChild(label);
-    }, 100);
-  });
-  // 티켓 하단 큰 QR (인식용)
+  if (!v.qrUrl || typeof qrcode === 'undefined') return;
   document.querySelectorAll('[id^="qrs-"]').forEach(function(el) {
     el.innerHTML = '';
-    new QRCode(el, {
-      text: v.qrUrl,
-      width: 90,
-      height: 90,
-      colorDark: '#000',
-      colorLight: '#fff',
-      correctLevel: QRCode.CorrectLevel.L
-    });
+    // qrcode-generator로 QR 매트릭스 생성
+    var qr = qrcode(0, 'L');  // 타입 0=자동, 오류정정 L
+    qr.addData(v.qrUrl);
+    qr.make();
+    var size = qr.getModuleCount();
+    var cellSize = 44 / size;  // 44pt 안에 맞게 셀 크기 계산
+    // SVG로 직접 렌더 → 벡터, 해상도 무관
+    var svgParts = [
+      '<svg xmlns="http://www.w3.org/2000/svg"',
+      ' width="44pt" height="44pt"',
+      ' viewBox="0 0 ' + size + ' ' + size + '"',
+      ' shape-rendering="crispEdges">',
+      '<rect width="' + size + '" height="' + size + '" fill="white"/>'
+    ];
+    for (var row = 0; row < size; row++) {
+      for (var col = 0; col < size; col++) {
+        if (qr.isDark(row, col)) {
+          svgParts.push(
+            '<rect x="' + col + '" y="' + row + '" width="1" height="1" fill="black"/>'
+          );
+        }
+      }
+    }
+    svgParts.push('</svg>');
+    el.innerHTML = svgParts.join('');
   });
 }
 
@@ -906,7 +897,7 @@ function previewTickets() {
   seats.forEach(function(arr) {
     var wrap = document.createElement('div');
     wrap.className = 'ticket-preview-wrap';
-    wrap.innerHTML = buildTicket(arr[0], arr[1], arr[2], v);
+    wrap.innerHTML = buildTicket(arr[0], arr[1], arr[2], v) + buildQRStrip(arr[0], arr[1], arr[2], v);
     container.appendChild(wrap);
   });
   setTimeout(function(){ generateQRCodes(v); }, 50);
@@ -921,14 +912,21 @@ function printTickets() {
   var v = getFormValues();
   var pa = document.getElementById('print-area');
   pa.innerHTML = seats.map(function(arr) {
-    return buildTicket(arr[0], arr[1], arr[2], v);
+    return buildTicket(arr[0], arr[1], arr[2], v) + buildQRStrip(arr[0], arr[1], arr[2], v);
   }).join('');
   if (v.qrUrl) {
+    // QR 있으면 페이지 높이를 티켓+띠 합산으로 변경
+    var styleEl = document.getElementById('dynamic-page-size') || document.createElement('style');
+    styleEl.id = 'dynamic-page-size';
+    styleEl.textContent = '@page { size: 428pt 220pt; margin: 0; }';
+    document.head.appendChild(styleEl);
     setTimeout(function(){
       generateQRCodes(v);
       setTimeout(function(){ window.print(); }, 300);
     }, 50);
   } else {
+    var styleEl = document.getElementById('dynamic-page-size');
+    if (styleEl) styleEl.textContent = '@page { size: 428pt 164pt; margin: 0; }';
     window.print();
   }
 }
