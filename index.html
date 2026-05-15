@@ -235,25 +235,9 @@
   #print-area { display: none; }
 
   /* ===== TICKET ===== */
-  /* QR 띠 (티켓 바로 아래, 같은 페이지) */
-  .qr-strip {
-    width: 428pt;
-    height: 56pt;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    padding: 0 10pt;
-    gap: 10pt;
-    border-top: 1pt dashed #aaa;
-    page-break-inside: avoid;
-    page-break-before: avoid;
-  }
-  .qr-strip-qr { flex-shrink: 0; }
-  .qr-strip-qr img, .qr-strip-qr canvas { width: 44pt !important; height: 44pt !important; display: block !important; }
-  .qr-strip-info { font-family: "Noto Sans KR", sans-serif; line-height: 1.5; }
-  .qr-strip-label { font-size: 8.5pt; font-weight: 700; color: #1a1a1a; }
-  .qr-strip-seat  { font-size: 7.5pt; color: #555; }
-  .qr-strip-url   { font-size: 6pt; color: #999; margin-top: 1pt; }
+  /* 티켓 내부 QR */
+  .qr-area { position: absolute; right: 18pt; bottom: 6pt; }
+  .qr-area .qr-label { font-size: 5pt; color: #555; text-align: center; margin-top: 1pt; font-family: 'Noto Sans KR', sans-serif; line-height: 1; font-weight: 700; }
   .ticket-wrapper { width: 428pt; height: 164pt; position: relative; overflow: hidden; background: #fff; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; }
   .ticket-divider { position: absolute; left: 133pt; top: 0; width: 1pt; height: 164pt; background: repeating-linear-gradient(to bottom, #888 0, #888 4pt, transparent 4pt, transparent 7pt); }
   .stub { position: absolute; left: 8.519pt; top: 0; width: 124pt; height: 164pt; }
@@ -810,7 +794,7 @@ function buildTicket(blk, row, seatNum, v) {
 
   var m5 = '좌석권 : ' + sf;
   // QR이 있으면 우측 44pt를 QR 영역으로 확보
-  var mainW = 278.653;
+  var mainW = v.qrUrl ? 214 : 278.653;
 
   return '<div class="ticket-wrapper">' +
     '<div class="ticket-divider"></div>' +
@@ -840,25 +824,12 @@ function buildTicket(blk, row, seatNum, v) {
   '</div>';
 }
 
-// ========== QR 띠 빌드 ==========
-function buildQRStrip(blk, row, seatNum, v) {
-  if (!v.qrUrl) return '';
-  var sf = blk + ' ' + row + ' ' + seatNum + '번';
-  var divId = 'qrs-' + blk.replace(/[^a-zA-Z0-9]/g,'') + row.replace(/[^a-zA-Z0-9]/g,'') + seatNum;
-  return '<div class="qr-strip">' +
-    '<div class="qr-strip-qr" id="' + divId + '"></div>' +
-    '<div class="qr-strip-info">' +
-      '<div class="qr-strip-label">' + esc(v.qrLabel) + '</div>' +
-      '<div class="qr-strip-seat">' + esc(sf) + '</div>' +
-      '<div class="qr-strip-url">' + esc(v.qrUrl) + '</div>' +
-    '</div>' +
-  '</div>';
-}
+
 
 // ========== 미리보기 / 인쇄 ==========
 function generateQRCodes(v) {
   if (!v.qrUrl || typeof qrcode === 'undefined') return;
-  document.querySelectorAll('[id^="qrs-"]').forEach(function(el) {
+  document.querySelectorAll('.qr-area').forEach(function(el) {
     el.innerHTML = '';
     // qrcode-generator로 QR 매트릭스 생성
     var qr = qrcode(0, 'L');  // 타입 0=자동, 오류정정 L
@@ -885,6 +856,10 @@ function generateQRCodes(v) {
     }
     svgParts.push('</svg>');
     el.innerHTML = svgParts.join('');
+    var label = document.createElement('div');
+    label.className = 'qr-label';
+    label.textContent = v.qrLabel;
+    el.appendChild(label);
   });
 }
 
@@ -897,7 +872,7 @@ function previewTickets() {
   seats.forEach(function(arr) {
     var wrap = document.createElement('div');
     wrap.className = 'ticket-preview-wrap';
-    wrap.innerHTML = buildTicket(arr[0], arr[1], arr[2], v) + buildQRStrip(arr[0], arr[1], arr[2], v);
+    wrap.innerHTML = buildTicket(arr[0], arr[1], arr[2], v);
     container.appendChild(wrap);
   });
   setTimeout(function(){ generateQRCodes(v); }, 50);
@@ -912,21 +887,14 @@ function printTickets() {
   var v = getFormValues();
   var pa = document.getElementById('print-area');
   pa.innerHTML = seats.map(function(arr) {
-    return buildTicket(arr[0], arr[1], arr[2], v) + buildQRStrip(arr[0], arr[1], arr[2], v);
+    return buildTicket(arr[0], arr[1], arr[2], v);
   }).join('');
   if (v.qrUrl) {
-    // QR 있으면 페이지 높이를 티켓+띠 합산으로 변경
-    var styleEl = document.getElementById('dynamic-page-size') || document.createElement('style');
-    styleEl.id = 'dynamic-page-size';
-    styleEl.textContent = '@page { size: 428pt 220pt; margin: 0; }';
-    document.head.appendChild(styleEl);
     setTimeout(function(){
       generateQRCodes(v);
       setTimeout(function(){ window.print(); }, 300);
     }, 50);
   } else {
-    var styleEl = document.getElementById('dynamic-page-size');
-    if (styleEl) styleEl.textContent = '@page { size: 428pt 164pt; margin: 0; }';
     window.print();
   }
 }
