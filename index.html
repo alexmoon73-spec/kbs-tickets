@@ -3092,7 +3092,7 @@ function getFormValues() {
   var perf = document.getElementById('f-perf').value.trim();
   var notice = document.getElementById('f-notice').value.trim();
   var qrUrl = document.getElementById('f-qr').value.trim();
-  var qrLabel = document.getElementById('f-qr-label').value.trim() || '공연안내';
+  var qrLabel = document.getElementById('f-qr-label').value.trim();
   var ym = ev.match(/^(\d{4})\s*/);
   var year = ym ? ym[1] : '';
   var evName = ym ? ev.slice(ym[0].length) : ev;
@@ -3181,9 +3181,11 @@ function generateQRCodes(v) {
         + '</svg>';
       el.innerHTML = svg;
       var label = document.createElement('div');
-      label.className = 'qr-label';
-      label.textContent = v.qrLabel;
-      el.appendChild(label);
+      if (v.qrLabel) {
+        label.className = 'qr-label';
+        label.textContent = v.qrLabel;
+        el.appendChild(label);
+      }
     } catch(e) { console.error('QR error:', e); }
   });
 }
