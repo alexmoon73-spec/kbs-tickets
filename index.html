@@ -213,6 +213,8 @@
   .btn-secondary { padding: 11px 18px; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 5px; font-size: 13px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.15s; }
   .btn-secondary:hover { background: var(--accent); color: #fff; }
   .print-hint { font-size: 12px; color: var(--muted); }
+  .save-badge { font-size: 11px; color: #2a6a2a; background: #eef7ee; border: 1px solid #aac8aa; border-radius: 4px; padding: 3px 10px; display: none; }
+  .save-badge.show { display: inline-block; }
   .mode-tabs { display: flex; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; width: fit-content; }
   .mode-tab { padding: 7px 20px; font-size: 13px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; background: #e8e0d0; color: var(--muted); cursor: pointer; border: none; border-right: 1px solid var(--border); transition: all 0.15s; }
   .mode-tab:last-child { border-right: none; }
@@ -356,6 +358,7 @@
     <button class="btn-primary" id="btn-print">🖨 PDF 출력</button>
     <button class="btn-secondary" id="btn-preview">👁 미리보기</button>
     <span class="print-hint">Chrome에서 "PDF로 저장" 선택</span>
+    <span class="save-badge" id="save-badge">✓ 자동 저장됨</span>
   </div>
 
   <div id="preview-area">
@@ -3363,15 +3366,75 @@ function updateSummary() {
 }
 
 // ========== 초기화 ==========
+// ========== 자동 저장 / 불러오기 ==========
+var SAVE_KEY = 'kbs_ticket_v1';
+var saveTimer = null;
+
+function saveState() {
+  try {
+    var state = {
+      hall: hall,
+      printMode: printMode,
+      fields: {}
+    };
+    ['f-event','f-venue','f-date','f-subtitle','f-perf','f-notice','f-qr','f-qr-label','exclude-input','specific-input'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) state.fields[id] = el.value;
+    });
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    // 저장 배지 표시
+    var badge = document.getElementById('save-badge');
+    if (badge) {
+      badge.classList.add('show');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function(){ badge.classList.remove('show'); }, 2000);
+    }
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    var state = JSON.parse(raw);
+    // 홀 복원
+    if (state.hall && state.hall !== hall) {
+      hall = state.hall;
+      document.querySelectorAll('.hall-tab').forEach(function(t){ t.classList.remove('active'); });
+      var tabEl = document.getElementById('tab-' + hall);
+      if (tabEl) tabEl.classList.add('active');
+    }
+    // 입력 필드 복원
+    if (state.fields) {
+      Object.keys(state.fields).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.value = state.fields[id];
+      });
+    }
+    // 모드 복원
+    if (state.printMode && state.printMode !== printMode) {
+      switchMode(state.printMode);
+    }
+  } catch(e) {}
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+  // 이벤트 바인딩
   document.getElementById('tab-arthall').addEventListener('click', function(){ switchHall('arthall'); });
   document.getElementById('tab-kbshall').addEventListener('click', function(){ switchHall('kbshall'); });
   document.getElementById('mode-tab-exclude').addEventListener('click', function(){ switchMode('exclude'); });
   document.getElementById('mode-tab-specific').addEventListener('click', function(){ switchMode('specific'); });
   document.getElementById('btn-print').addEventListener('click', printTickets);
   document.getElementById('btn-preview').addEventListener('click', previewTickets);
-  document.getElementById('exclude-input').addEventListener('input', updateSummary);
-  document.getElementById('specific-input').addEventListener('input', updateSummary);
+
+  // 모든 입력 필드에 자동 저장 연결
+  ['f-event','f-venue','f-date','f-subtitle','f-perf','f-notice','f-qr','f-qr-label','exclude-input','specific-input'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', function(){ updateSummary(); saveState(); });
+  });
+
+  // 저장된 상태 불러오기
+  loadState();
   updateSummary();
 });
 </script>
