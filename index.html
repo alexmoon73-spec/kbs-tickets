@@ -3113,21 +3113,15 @@ function buildTicket(blk, row, seatNum, v) {
     '<div class="ticket-divider"></div>' +
     '<div class="stub">' +
       '<div class="stub-line" style="top:26.623pt;font-size:'+afs(v.ev,11.0131,112)+'pt">'+esc(v.ev)+'</div>' +
-      '<div class="stub-line" style="top:44.100pt;font-size:'+afs(stubOrch,11.0131,112)+'pt">'+esc(stubOrch)+'</div>' +
+      '<div class="stub-line" style="top:44.100pt;font-size:'+afs(v.subtitle,11.0131,112)+'pt">'+esc(v.subtitle)+'</div>' +
       '<div class="stub-line" style="top:61.698pt;font-size:'+afs(v.shortDate,13.0,112)+'pt">'+esc(v.shortDate)+'</div>' +
       '<div class="stub-line" style="top:79.295pt;font-size:'+afs(v.venue,11.0131,112)+'pt">'+esc(v.venue)+'</div>' +
       '<div class="stub-line" style="top:103.236pt;font-size:11.0131pt">좌석권</div>' +
       '<div class="stub-line" style="top:120.785pt;font-size:'+afs(sf,11.9708,112)+'pt">'+esc(sf)+'</div>' +
     '</div>' +
     '<div class="main">' +
-      '<div class="mixed-row" style="top:23.582pt;height:14.9635pt">' +
-        '<span class="span-a" style="font-size:14.9635pt">'+esc(v.year)+'</span>' +
-        '<span class="span-b" style="left:35.5pt;font-size:'+afs(v.evName,14.0058,v.qrUrl?196:243)+'pt">'+esc(v.evName)+'</span>' +
-      '</div>' +
-      '<div class="mixed-row" style="top:42.903pt;height:14.0058pt">' +
-        '<span class="span-a" style="font-size:14.0058pt">KBS국악관현악단</span>' +
-        '<span class="span-b" style="left:106pt;font-size:'+afs(v.subtitle,9.9358,v.qrUrl?130:172)+'pt">'+esc(v.subtitle)+'</span>' +
-      '</div>' +
+      '<div class="main-line" style="top:23.582pt;font-size:'+afs(v.ev,14.9635,mainW)+'pt">'+esc(v.ev)+'</div>' +
+      '<div class="main-line" style="top:42.903pt;font-size:'+afs(v.subtitle,14.0058,mainW)+'pt">'+esc(v.subtitle)+'</div>' +
       '<div class="main-line" style="top:63.996pt;font-size:'+afs(m3,9.9358,mainW)+'pt">'+esc(m3)+'</div>' +
       '<div class="main-line" style="top:81.785pt;font-size:'+afs(v.perf,8.4993,mainW)+'pt">'+esc(v.perf)+'</div>' +
       '<div class="main-line" style="top:103.954pt;font-size:'+afs(m5,14.0058,mainW)+'pt">'+esc(m5)+'</div>' +
