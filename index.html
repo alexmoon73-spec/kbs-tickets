@@ -3103,10 +3103,7 @@ function buildTicket(blk, row, seatNum, v) {
   // 스텁 단체명: KBS홀은 <KBS국악관현악단>
   var stubOrch = 'KBS국악관현악단';
 
-  // 날짜 줄: KBS홀은 "일시 : … / 장소 : …"
-  var m3 = isKBS
-    ? '일시 : ' + v.dateLong + ' / 장소 : ' + v.venue
-    : v.dateLong + ' / ' + v.venue;
+  var m3 = v.dateLong + ' / ' + v.venue;
 
   var m5 = '좌석권 : ' + sf;
   // QR이 있으면 우측 44pt를 QR 영역으로 확보
