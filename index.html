@@ -2823,7 +2823,7 @@ var SEATS = {
       {row:'8열', seats:[1, 2, 3, 4, 5, 6, 7, 8, 9]},
       {row:'9열', seats:[1, 2, 3, 4, 5, 6, 7, 8, 9]},
       {row:'10열', seats:[1, 2, 3, 4, 5, 6, 7, 8, 9]},
-      {row:'11열', seats:[3, 4, 5, 6, 6, 6, 7, 8, 9]},
+      {row:'11열', seats:[1,2,3,4,5,6,7,8,9]},
       {row:'12열', seats:[1, 2, 3, 4, 5, 6, 7, 8, 9]},
       {row:'13열', seats:[1, 2, 3, 4, 5, 6, 7, 8, 9]},
       {row:'14열', seats:[1, 2, 3, 4, 5, 6, 7, 8, 9]},
@@ -3194,8 +3194,9 @@ function printTickets() {
   if (v.qrUrl) {
     setTimeout(function(){
       generateQRCodes(v);
-      setTimeout(function(){ window.print(); }, 300);
-    }, 50);
+      // SVG QR 렌더링 완료 후 인쇄 (충분한 대기)
+      setTimeout(function(){ window.print(); }, 800);
+    }, 100);
   } else {
     window.print();
   }
