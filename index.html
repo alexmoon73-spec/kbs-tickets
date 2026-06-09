@@ -238,7 +238,7 @@
 
   /* ===== TICKET ===== */
   /* 티켓 내부 QR */
-  .qr-area { position: absolute; right: 18pt; bottom: 6pt; }
+  .qr-area { position: absolute; right: 16pt; top: 88pt; }
   .qr-area .qr-label { font-size: 5pt; color: #555; text-align: center; margin-top: 1pt; font-family: 'Noto Sans KR', sans-serif; line-height: 1; font-weight: 700; }
   .ticket-wrapper { width: 428pt; height: 164pt; position: relative; overflow: hidden; background: #fff; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; }
   .ticket-divider { position: absolute; left: 133pt; top: 0; width: 1pt; height: 164pt; background: repeating-linear-gradient(to bottom, #888 0, #888 4pt, transparent 4pt, transparent 7pt); }
@@ -355,9 +355,9 @@
   </div>
 
   <div class="action-bar">
-    <button class="btn-primary" id="btn-print">🖨 PDF 출력</button>
+    <button class="btn-primary" id="btn-print">💾 PDF 저장</button>
     <button class="btn-secondary" id="btn-preview">👁 미리보기</button>
-    <span class="print-hint">Chrome에서 "PDF로 저장" 선택</span>
+    <span class="print-hint">크롬 브라우저 전용입니다.</span>
     <span class="save-badge" id="save-badge">✓ 자동 저장됨</span>
   </div>
 
@@ -3107,7 +3107,7 @@ function buildTicket(blk, row, seatNum, v) {
 
   var m5 = '좌석권 : ' + sf;
   // QR이 있으면 우측 44pt를 QR 영역으로 확보
-  var mainW = v.qrUrl ? 214 : 278.653;
+  var mainW = 278.653;
 
   return '<div class="ticket-wrapper">' +
     '<div class="ticket-divider"></div>' +
@@ -3125,7 +3125,7 @@ function buildTicket(blk, row, seatNum, v) {
       '<div class="main-line" style="top:63.996pt;font-size:'+afs(m3,9.9358,mainW)+'pt">'+esc(m3)+'</div>' +
       '<div class="main-line" style="top:81.785pt;font-size:'+afs(v.perf,8.4993,mainW)+'pt">'+esc(v.perf)+'</div>' +
       '<div class="main-line" style="top:103.954pt;font-size:'+afs(m5,14.0058,mainW)+'pt">'+esc(m5)+'</div>' +
-      '<div class="main-line" style="top:128.614pt;font-size:'+afs(v.notice,8.0204,mainW)+'pt">'+esc(v.notice)+'</div>' +
+      '<div class="main-line" style="top:128.614pt;font-size:'+afs(v.notice,8.0204,v.qrUrl?210:mainW)+'pt">'+esc(v.notice)+'</div>' +
     '</div>' +
     (v.qrUrl ? '<div class="qr-area" id="qr-'+blk.replace(/[^a-zA-Z0-9]/g,'')+row.replace(/[^a-zA-Z0-9]/g,'')+seatNum+'"></div>' : '') +
   '</div>';
