@@ -215,6 +215,20 @@
   .print-hint { font-size: 12px; color: var(--muted); }
   .save-badge { font-size: 11px; color: #2a6a2a; background: #eef7ee; border: 1px solid #aac8aa; border-radius: 4px; padding: 3px 10px; display: none; }
   .save-badge.show { display: inline-block; }
+  .progress-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.55); z-index: 9999;
+    align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+  }
+  .progress-overlay.show { display: flex; }
+  .progress-box {
+    background: #fff; border-radius: 10px; padding: 32px 40px;
+    text-align: center; min-width: 280px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  .progress-box h3 { font-size: 16px; font-weight: 700; color: var(--accent); margin-bottom: 14px; font-family: 'Noto Sans KR', sans-serif; }
+  .progress-bar-wrap { background: #e8e0d0; border-radius: 6px; height: 10px; overflow: hidden; margin-bottom: 10px; }
+  .progress-bar-fill { height: 10px; background: var(--accent); border-radius: 6px; width: 0%; transition: width 0.1s; }
+  .progress-text { font-size: 13px; color: var(--muted); font-family: 'Noto Sans KR', sans-serif; }
   .mode-tabs { display: flex; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; width: fit-content; }
   .mode-tab { padding: 7px 20px; font-size: 13px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; background: #e8e0d0; color: var(--muted); cursor: pointer; border: none; border-right: 1px solid var(--border); transition: all 0.15s; }
   .mode-tab:last-child { border-right: none; }
@@ -253,6 +267,15 @@
 </head>
 <body>
 
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-box">
+    <h3>티켓 생성 중...</h3>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-text" id="progress-text">준비 중...</div>
+  </div>
+</div>
 <div class="no-print">
   <header>
     <div class="logo-mark">국악</div>
@@ -3188,18 +3211,58 @@ function printTickets() {
   if (!seats.length) { alert('발급할 좌석이 없습니다.'); return; }
   var v = getFormValues();
   var pa = document.getElementById('print-area');
-  pa.innerHTML = seats.map(function(arr) {
-    return buildTicket(arr[0], arr[1], arr[2], v);
-  }).join('');
-  if (v.qrUrl) {
-    setTimeout(function(){
-      generateQRCodes(v);
-      // SVG QR 렌더링 완료 후 인쇄 (충분한 대기)
-      setTimeout(function(){ window.print(); }, 800);
-    }, 100);
-  } else {
-    window.print();
+  var overlay = document.getElementById('progress-overlay');
+  var fill = document.getElementById('progress-fill');
+  var txt = document.getElementById('progress-text');
+  var total = seats.length;
+
+  // 오버레이 표시
+  overlay.classList.add('show');
+  pa.innerHTML = '';
+  fill.style.width = '0%';
+  txt.textContent = '0 / ' + total + '장';
+
+  // 청크 단위 렌더링 (50장씩)
+  var CHUNK = 50;
+  var idx = 0;
+
+  function renderChunk() {
+    var end = Math.min(idx + CHUNK, total);
+    var frag = '';
+    for (var i = idx; i < end; i++) {
+      frag += buildTicket(seats[i][0], seats[i][1], seats[i][2], v);
+    }
+    pa.innerHTML += frag;
+    idx = end;
+
+    var pct = Math.round(idx / total * 100);
+    fill.style.width = pct + '%';
+    txt.textContent = idx + ' / ' + total + '장 생성 중...';
+
+    if (idx < total) {
+      setTimeout(renderChunk, 0);  // 브라우저에 제어권 반환 후 다음 청크
+    } else {
+      // 전체 렌더 완료
+      txt.textContent = '인쇄 준비 중...';
+      fill.style.width = '100%';
+      if (v.qrUrl) {
+        setTimeout(function(){
+          generateQRCodes(v);
+          setTimeout(function(){
+            overlay.classList.remove('show');
+            window.print();
+          }, 800);
+        }, 100);
+      } else {
+        setTimeout(function(){
+          overlay.classList.remove('show');
+          window.print();
+        }, 200);
+      }
+    }
   }
+
+  setTimeout(renderChunk, 50);  // 오버레이 렌더 후 시작
 }
 
 // ========== 모드 전환 ==========
