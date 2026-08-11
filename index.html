@@ -260,6 +260,8 @@
   .stub-line { position: absolute; left: 0; width: 112pt; white-space: nowrap; overflow: hidden; font-weight: 700; line-height: 1; }
   .main { position: absolute; left: 141.347pt; top: 0; width: 278.653pt; height: 164pt; }
   .main-line { position: absolute; left: 0; white-space: nowrap; overflow: hidden; font-weight: 700; line-height: 1; }
+  .performer-block { position: absolute; left: 0; width: 278.653pt; height: 21pt; overflow: hidden; font-weight: 700; line-height: 1.12; }
+  .performer-line { white-space: nowrap; overflow: hidden; }
   .mixed-row { position: absolute; left: 0; width: 278.653pt; overflow: hidden; }
   .mixed-row .span-a { position: absolute; left: 0; bottom: 0; white-space: nowrap; font-weight: 700; line-height: 1; }
   .mixed-row .span-b { position: absolute; bottom: 0; white-space: nowrap; font-weight: 700; line-height: 1; }
@@ -3109,6 +3111,65 @@ function afs(text, base, maxW) {
   var fs = est <= maxW ? base : Math.max(base * maxW / est, 6);
   return fs.toFixed(4);
 }
+
+// 출연자는 한 줄에 들어가면 기존 위치를 유지하고,
+// 길어지면 쉼표 단위로 균형 있게 나눠 최대 두 줄로 표시한다.
+function performerLayout(text, base, maxW) {
+  var value = String(text || '').trim();
+  var charW = CW[base] || base * 0.67;
+
+  if (!value || value.length * charW <= maxW) {
+    return { lines: [value], fontSize: base.toFixed(4), top: '81.785' };
+  }
+
+  var parts = value.split(/\s*,\s*/).filter(function(part) { return part; });
+  var candidates = [];
+
+  if (parts.length > 1) {
+    for (var i = 1; i < parts.length; i++) {
+      candidates.push([
+        parts.slice(0, i).join(', ') + ',',
+        parts.slice(i).join(', ')
+      ]);
+    }
+  } else {
+    var words = value.split(/\s+/).filter(function(word) { return word; });
+    if (words.length > 1) {
+      for (var j = 1; j < words.length; j++) {
+        candidates.push([
+          words.slice(0, j).join(' '),
+          words.slice(j).join(' ')
+        ]);
+      }
+    } else {
+      var mid = Math.ceil(value.length / 2);
+      candidates.push([value.slice(0, mid), value.slice(mid)]);
+    }
+  }
+
+  var best = candidates[0];
+  var bestSize = 0;
+  var bestBalance = Infinity;
+  candidates.forEach(function(lines) {
+    var lineSize = Math.min(
+      parseFloat(afs(lines[0], base, maxW)),
+      parseFloat(afs(lines[1], base, maxW))
+    );
+    var balance = Math.abs(lines[0].length - lines[1].length);
+    if (lineSize > bestSize || (lineSize === bestSize && balance < bestBalance)) {
+      best = lines;
+      bestSize = lineSize;
+      bestBalance = balance;
+    }
+  });
+
+  return {
+    lines: best,
+    fontSize: Math.min(base, bestSize || base).toFixed(4),
+    top: '79.000'
+  };
+}
+
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -3132,6 +3193,10 @@ function buildTicket(blk, row, seatNum, v) {
   var m5 = '좌석권 : ' + sf;
   // QR이 있으면 우측 44pt를 QR 영역으로 확보
   var mainW = 278.653;
+  var perfLayout = performerLayout(v.perf, 8.4993, mainW);
+  var perfHtml = perfLayout.lines.map(function(line) {
+    return '<div class="performer-line">'+esc(line)+'</div>';
+  }).join('');
 
   return '<div class="ticket-wrapper">' +
     '<div class="ticket-divider"></div>' +
@@ -3147,8 +3212,8 @@ function buildTicket(blk, row, seatNum, v) {
       '<div class="main-line" style="top:23.582pt;font-size:'+afs(v.ev,14.9635,mainW)+'pt">'+esc(v.ev)+'</div>' +
       '<div class="main-line" style="top:42.903pt;font-size:'+afs(v.subtitle,14.0058,mainW)+'pt">'+esc(v.subtitle)+'</div>' +
       '<div class="main-line" style="top:63.996pt;font-size:'+afs(m3,9.9358,mainW)+'pt">'+esc(m3)+'</div>' +
-      '<div class="main-line" style="top:81.785pt;font-size:'+afs(v.perf,8.4993,v.qrUrl?mainW:268)+'pt">'+esc(v.perf)+'</div>' +
-      '<div class="main-line" style="top:103.954pt;font-size:'+afs(m5,14.0058,mainW)+'pt">'+esc(m5)+'</div>' +
+      '<div class="performer-block" style="top:'+perfLayout.top+'pt;font-size:'+perfLayout.fontSize+'pt">'+perfHtml+'</div>' +
+      '<div class="main-line" style="top:107.954pt;font-size:'+afs(m5,14.0058,mainW)+'pt">'+esc(m5)+'</div>' +
       '<div class="main-line" style="top:128.614pt;font-size:'+afs(v.notice,8.0204,v.qrUrl?210:mainW)+'pt">'+esc(v.notice)+'</div>' +
     '</div>' +
     (v.qrUrl ? '<div class="qr-area" id="qr-'+blk.replace(/[^a-zA-Z0-9]/g,'')+row.replace(/[^a-zA-Z0-9]/g,'')+seatNum+'"></div>' : '') +
